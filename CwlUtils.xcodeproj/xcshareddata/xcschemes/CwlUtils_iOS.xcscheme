@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C95BDE9A1E41688B00AAA64B"
                BuildableName = "CwlUtils.framework"
-               BlueprintName = "CwlUtils_iOS"
+               BlueprintName = "CwlUtils"
                ReferencedContainer = "container:CwlUtils.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -44,7 +44,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C95BDE9A1E41688B00AAA64B"
             BuildableName = "CwlUtils.framework"
-            BlueprintName = "CwlUtils_iOS"
+            BlueprintName = "CwlUtils"
             ReferencedContainer = "container:CwlUtils.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -66,7 +66,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C95BDE9A1E41688B00AAA64B"
             BuildableName = "CwlUtils.framework"
-            BlueprintName = "CwlUtils_iOS"
+            BlueprintName = "CwlUtils"
             ReferencedContainer = "container:CwlUtils.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -84,7 +84,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "C95BDE9A1E41688B00AAA64B"
             BuildableName = "CwlUtils.framework"
-            BlueprintName = "CwlUtils_iOS"
+            BlueprintName = "CwlUtils"
             ReferencedContainer = "container:CwlUtils.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
