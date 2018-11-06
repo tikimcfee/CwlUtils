@@ -210,7 +210,6 @@
 
 /* Begin PBXFileReference section */
 		C94D2B9921919BEA00B6D53B /* CwlUtils_tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CwlUtils_tvOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		C94D2B9A21919BEA00B6D53B /* CwlUtils_iOSTests copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "CwlUtils_iOSTests copy-Info.plist"; path = "/Users/matt/Projects/CwlUtils/CwlUtils_iOSTests copy-Info.plist"; sourceTree = "<absolute>"; };
 		C95A622A1EA5D90C0059D152 /* CwlLifetime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CwlLifetime.swift; sourceTree = "<group>"; };
 		C95A77271E4187E600659DBD /* CwlUtils_macOSTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CwlUtils_macOSTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C95A77291E4187E600659DBD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -353,13 +352,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C9075586219128D100C34A11 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		C95A77281E4187E600659DBD /* CwlUtils_macOSTestApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -575,8 +567,6 @@
 				C9D734B6211EB3C300804C4E /* Scripts */,
 				OBJ_7 /* Sources */,
 				OBJ_38 /* Tests */,
-				C9075586219128D100C34A11 /* Frameworks */,
-				C94D2B9A21919BEA00B6D53B /* CwlUtils_iOSTests copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1108,7 +1098,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				INFOPLIST_FILE = "CwlUtils_iOSTests copy-Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Tests/CwlUtilsTests/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cocoawithlove.CwlUtils-iOSTests";
@@ -1122,7 +1112,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				INFOPLIST_FILE = "CwlUtils_iOSTests copy-Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Tests/CwlUtilsTests/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cocoawithlove.CwlUtils-iOSTests";
@@ -1279,6 +1269,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cocoawithlove.CwlUtils-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "Tests/CwlUtilsTests/CwlUtilsTests-BridgingHeader.h";
 			};
 			name = Debug;
@@ -1293,6 +1284,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.cocoawithlove.CwlUtils-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OBJC_BRIDGING_HEADER = "Tests/CwlUtilsTests/CwlUtilsTests-BridgingHeader.h";
 			};
 			name = Release;
