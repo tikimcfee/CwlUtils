@@ -51,6 +51,12 @@ public extension Error {
 	}
 }
 
+// A function that returns an `Error` of a non-public type, that already has `withUnanticipatedErrorRecoveryAttempter`
+public func undeclaredError(file: String = #file, line: Int = #line) -> Error {
+	struct UndeclaredError: Error {}
+	return UndeclaredError().withUnanticipatedErrorRecoveryAttempter(file: file, line: line )
+}
+
 /// A convenience wrapper that applies `withUnanticipatedErrorRecoveryAttempter` to any error thrown by the wrapped function
 public func rethrowUnanticipated<T>(file: String = #file, line: Int = #line, execute: () throws -> T) throws -> T {
 	do {
