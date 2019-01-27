@@ -43,7 +43,7 @@ public extension Exec {
 		}
 		return self
 	}
-
+	
 	/// Invoked on the main thread, always asynchronously (unless invokeSync is used)
 	static var mainAsync: Exec {
 		return .queue(.main, .serialAsync)
@@ -99,11 +99,9 @@ public extension Exec {
 		q.setSpecific(key: specificKey, value: ())
 		return (Exec.queue(q, ExecutionType.serialAsync), specificKey)
 	}
-	
 }
 
 extension Exec: ExecutionContext {
-	
 	/// A description about how functions will be invoked on an execution context.
 	public var type: ExecutionType {
 		switch self {
@@ -151,6 +149,13 @@ extension Exec: ExecutionContext {
 		case .queue(_, let t) where t.isConcurrent: return execute()
 		case .queue(DispatchQueue.main, _) where Thread.current.isMainThread: return execute()
 		case .queue(let q, _): return q.sync(execute: execute) 
+		}
+	}
+	
+	public func globalAsync(_ execute: @escaping () -> Void) {
+		switch self {
+		case .custom(let c): c.globalAsync(execute)
+		default: DispatchQueue.global().async(execute: execute)
 		}
 	}
 	
@@ -205,7 +210,6 @@ extension Exec: ExecutionContext {
 }
 
 public extension Exec {
-
 	@available(*, deprecated, message:"Values returned from this may be misleading. Perform your own switch to precisely get the information you need.")
 	var dispatchQueue: DispatchQueue {
 		switch self {
@@ -214,5 +218,4 @@ public extension Exec {
 		case .queue(let q, _): return q
 		}
 	}
-
 }
