@@ -20,147 +20,8 @@
 
 import Foundation
 
-/// This type describes 9 key execution context types. Most exist as a pair between a sychronous and asynchronous version:
-///  * immediate and concurrentAsync
-///  * mutex and mutexAsync
-///  * recursive and recursiveAsync
-///  * thread and threadAsync
-/// With the final odd one lacking a synchronous version:
-///  * serialAsync
-/// This type offers an abstraction where these 9 types can be represented as a combination of the following properties:
-///  * isImmediate
-///  * isReentrant
-///  * isConcurrent
-///  * willNest
-public enum ExecutionType {
-	/// This execution type models a simple function invocation.
-	///	* completes before `invoke` returns (immediate)
-	///   * applies no mutex so nested calls to `invoke` will succeed (reentrant)
-	///   * will let parallel calls run at the same time (concurrent)
-	///   * invocation always inherits the caller's context (nest always)
-	/// e.g. directly calling
-	case immediate
-	
-	/// This execution type models a global concurrent work pool.
-	///	* runs outside the current context and might not complete before `invoke` returns (asynchronous)
-	///   * involves no mutex so nested calls to `invokeSync` are permitted (reentrant)
-	///   * will let parallel calls run at the same time (concurrent)
-	///   * normally async but `invokeSync` is invoked from the calling context (sync nests)
-	/// e.g. DispatchQueue.global().async
-	case concurrentAsync
-	
-	/// This execution type models a scoped non-recursive mutex.
-	///	* completes before `invoke` returns (immediate)
-	///   * applies a non-reentrant mutex so nested calls to `invoke` will deadlock (non-reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * invocation always inherits the caller's context (nest always)
-	/// e.g. dispatchQueue.sync
-	case mutex
-	
-	/// This execution type models a scoped non-recursive mutex on which work is typically performed asynchronously.
-	///	* runs outside the current context and might not complete before `invoke` returns (asynchronous)
-	///   * applies a non-reentrant mutex so nested calls to `invokeSync` will deadlock (non-reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * invocation only inherits the caller's context when calling `invokeSync` (nest sync)
-	/// e.g. dispatchQueue.async
-	case mutexAsync
-	
-	/// This execution type models a scoped recursive mutex.
-	///	* completes before `invoke` returns (immediate)
-	///   * applies a mutex but a nested `invoke` will safely re-enter the mutex (reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * invocation always inherits the caller's context (nest always)
-	/// e.g. NSRecursiveLock.lock(before:)
-	case recursiveMutex(() -> Bool)
-	
-	/// This execution type models a scoped recursive mutex on which work is typically performed asynchronously.
-	///	* runs outside the current context and might not complete before `invoke` returns (asynchronous)
-	///   * applies a reentrant mutex so nested calls to `invokeSync` will not deadlock (reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * invocation only inherits the caller's context when calling `invokeSync` (nest sync)
-	/// e.g. dispatchQueue.async
-	case recursiveAsync(() -> Bool)
-	
-	/// This execution type models a thread.
-	///	* if test function returns true, then `invoke` is immediate in the current context, otherwise asychronous (immediate/asynchronous)
-	///   * nested calls to `invoke` are permitted since they will simply be run immediately (reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * invocation only inherits the caller's context if test function returns true in current context (nest thread)
-	/// e.g. `if Thread.isMainThread { /* do work */ } else { DispatchQueue.main.async { /* do work */ }`
-	case thread(() -> Bool)
-	
-	/// This execution type models a thread on which work is typically performed asynchronously.
-	///	* `invoke` is always asynchronous (asynchronous)
-	///   * detects when it is already on the current thread so nested calls to `invokeSync` will not deadlock (reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * normally async but `invokeSync` nests if already on its thread (nest syncThread)
-	/// e.g. DispatchQueue.main.async
-	case threadAsync(() -> Bool)
-	
-	/// This execution type models an asynchronous resource that lacks any synchronous access.
-	///	* runs outside the current context and might not complete before `invoke` returns (asynchronous)
-	///   * applies a non-reentrant mutex so nested calls to `invokeSync` will deadlock (non-reentrant)
-	///   * will serialize parallel calls to run one at a time (serial)
-	///   * invocation never inherits the caller's context (nest no)
-	/// e.g. a serial resource that offers a `performAsync(_:() -> Void)` but doesn't offer a `performSync(_:() -> Void)`
-	case serialAsync
-}
-
-public extension ExecutionType {
-	/// Returns true if an invoked function is guaranteed to complete before the `invoke` returns.
-	/// The inverse of this value is "async"
-	var isImmediate: Bool {
-		switch self {
-		case .immediate, .mutex, .recursiveMutex: return true
-		case .thread(let isCurrent): return isCurrent()
-		case .serialAsync, .recursiveAsync, .concurrentAsync, .mutexAsync, .threadAsync: return false
-		}
-	}
-	
-	/// Returns true if an invoked function is guaranteed to complete before the `invoke` returns.
-	/// The inverse of this value is "non-reentrant"
-	var isReentrant: Bool {
-		switch self {
-		case .immediate, .recursiveAsync, .recursiveMutex, .thread, .threadAsync, .concurrentAsync: return true
-		case .mutex, .serialAsync, .mutexAsync: return false
-		}
-	}
-	
-	/// Returns true if simultaneous uses of the context from separate threads will run concurrently.
-	/// The inverse of this value is "serial"
-	var isConcurrent: Bool {
-		switch self {
-		case .immediate, .concurrentAsync: return true
-		case .mutex, .recursiveMutex, .recursiveAsync, .serialAsync, .thread, .threadAsync, .mutexAsync: return false
-		}
-	}
-	
-	/// Returns true if simultaneous uses of the context from separate threads will run concurrently.
-	/// The inverse of this value is "serial"
-	var willNest: ExecutionNesting {
-		switch self {
-		case .immediate, .mutex, .recursiveMutex: return .yes
-		case .recursiveAsync, .concurrentAsync, .mutexAsync: return .sync
-		case .thread(let test): return test() ? .yes : .sync
-		case .threadAsync(let test): return test() ? .sync : .no
-		case .serialAsync: return .no
-		}
-	}
-}
-
-public enum ExecutionNesting {
-	/// Invocation always inherits the caller's context
-	case yes
-
-	/// Invocation only inherits the caller's context when calling `invokeSync`
-	case sync
-	
-	/// Invocation only inherits the caller's context if you call from the appropriate thread
-	case no
-}
-
 /// An abstraction of common execution context concepts
-public protocol ExecutionContext {
+public protocol CustomExecutionContext {
 	/// A description about how functions will be invoked on an execution context.
 	var type: ExecutionType { get }
 	
@@ -175,9 +36,9 @@ public protocol ExecutionContext {
 	/// NOTE: a default implementation of this is provided that, if `type.isImmediate` is true, simply calls `invoke`, otherwise it calls `invoke` and blocks waiting on a semaphore in the calling context until `invoke` completes. Creating a semphore for every call is inefficient so you should implement this a different way, if possible.
 	func invokeSync<Return>(_ execute: () -> Return) -> Return
 	
-	/// Run `execute` asynchronously *outside* the execution context.
-	/// NOTE: a default implementation of this function is provided that calls `DispatchQueue.global().async`. With the exception of debug, test and other host-isolated contexts, this is usually sufficient. 
-	func globalAsync(_ execute: @escaping () -> Void)
+	/// A context that can be used to safely escape the current context.
+	/// NOTE: a default implementation of this function is provided that calls `DispatchQueue.global().async`. 
+	var asyncRelativeContext: Exec { get }
 	
 	/// Run `execute` on the execution context after `interval` (plus `leeway`) unless the returned `Lifetime` is cancelled or released before running occurs.
 	/// NOTE: a default implementation of this function is provided that runs the timer on the global dispatch queue and calls `invoke` when it fires. This implementation is likely sufficient for most cases but may not be appropriate if your context has strict timing or serialization requirements.
@@ -206,7 +67,7 @@ extension DispatchSource: Lifetime {
 }
 
 // Since it's not possible to have default parameters in protocols (yet) the "leeway" free functions are all default-implemented to call the "leeway" functions with a 0 second leeway.
-public extension ExecutionContext {
+public extension CustomExecutionContext {
 	func singleTimer(interval: DispatchTimeInterval, handler: @escaping () -> Void) -> Lifetime {
 		return singleTimer(interval: interval, leeway: .seconds(0), handler: handler)
 	}
@@ -221,13 +82,23 @@ public extension ExecutionContext {
 	}
 }
 
-public extension ExecutionContext {
+public extension CustomExecutionContext {
+	var isImmediateInCurrentContext: Bool { return type.isImmediateInCurrentContext }
+	var isAsyncInCurrentContext: Bool { return type.isAsyncInCurrentContext }
+	var isImmediateAlways: Bool { return type.isImmediateAlways }
+	var isPotentiallyAsync: Bool { return type.isPotentiallyAsync }
+	var isReentrant: Bool { return type.isReentrant }
+	var isNonReentrant: Bool { return type.isNonReentrant }
+	var isConcurrent: Bool { return type.isConcurrent }
+	var isSerial: Bool { return type.isSerial }
+
+
 	func timestamp() -> DispatchTime {
 		return DispatchTime.now()
 	}
 	
 	func invokeAsync(_ execute: @escaping () -> Void) {
-		if type.isImmediate == false {
+		if type.isImmediateInCurrentContext == false {
 			invoke(execute)
 		} else {
 			DispatchQueue.global().async { self.invoke(execute) }
@@ -237,7 +108,7 @@ public extension ExecutionContext {
 	func invokeSync<Return>(_ execute: () -> Return) -> Return {
 		return withoutActuallyEscaping(execute) { ex in
 			var r: Return? = nil
-			if type.isImmediate == true {
+			if type.isImmediateInCurrentContext == true {
 				invoke {
 					r = ex()
 				}
@@ -253,8 +124,8 @@ public extension ExecutionContext {
 		}
 	}
 	
-	func globalAsync(_ execute: @escaping () -> Void) {
-		DispatchQueue.global().async(execute: execute)
+	var asyncRelativeContext: Exec {
+		return Exec.global
 	}
 	
 	func singleTimer(interval: DispatchTimeInterval, leeway: DispatchTimeInterval, handler: @escaping () -> Void) -> Lifetime {
@@ -273,3 +144,6 @@ public extension ExecutionContext {
 		return DispatchSource.repeatingTimer(parameter: parameter, interval: interval, leeway: leeway, queue: DispatchQueue.global(), handler: { p in self.invoke{ handler(p) } }) as! DispatchSource
 	}
 }
+
+@available(*, deprecated, message: "Use Exec for variables or CustomExecutionContext for conformances used in the `custom` case of Exec")
+public typealias ExecutionContext = CustomExecutionContext
