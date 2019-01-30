@@ -56,6 +56,11 @@ public extension Exec {
 		return .queue(.global(), .concurrentAsync)
 	}
 	
+	/// Invoked asynchronously in the global queue with QOS_CLASS_DEFAULT priority
+	static func global(qos: DispatchQoS.QoSClass) -> Exec {
+		return .queue(.global(qos: qos), .concurrentAsync)
+	}
+	
 	/// Invoked asynchronously in the global queue with QOS_CLASS_USER_INTERACTIVE priority
 	static var interactive: Exec {
 		return .queue(.global(qos: .userInteractive), .concurrentAsync)
@@ -77,12 +82,12 @@ public extension Exec {
 	}
 	
 	/// Constructs an Exec.queue configured as an ExecutionType.recursiveMutex
-	static func syncQueue(qos: DispatchQoS = .default) -> Exec {
+	static func syncQueue(qos: DispatchQoS.QoSClass = .default) -> Exec {
 		return Exec.queue(DispatchQueue(label: ""), ExecutionType.mutex)
 	}
 	
 	/// Constructs an Exec.queue configured as an ExecutionType.recursiveAsync
-	static func asyncQueue(qos: DispatchQoS = .default) -> Exec {
+	static func asyncQueue(qos: DispatchQoS.QoSClass = .default) -> Exec {
 		return Exec.queue(DispatchQueue(label: ""), ExecutionType.serialAsync)
 	}
 }
@@ -123,24 +128,29 @@ extension Exec: CustomExecutionContext {
 	}
 	
 	/// Run `execute` on the execution context but don't return from this function until the provided function is complete.
-	public func invokeSync<Result>(_ execute: () -> Result) -> Result {
+	public func invokeSync<Result>(_ execute: () throws -> Result) rethrows -> Result {
 		switch self {
-		case .direct: return execute()
-		case .main where Thread.isMainThread: return execute()
-		case .main: return DispatchQueue.main.sync(execute: execute)
-		case .queue(_, .thread(let test)) where test(): return execute()
-		case .queue(_, .threadAsync(let test)) where test(): return execute()
-		case .queue(_, .recursiveMutex(let test)) where test(): return execute()
-		case .queue(let q, _): return withoutActuallyEscaping(execute) { e in q.sync(execute: e) }
-		case .custom(let c): return c.invokeSync(execute)
+		case .direct: return try execute()
+		case .main where Thread.isMainThread: return try execute()
+		case .main: return try DispatchQueue.main.sync(execute: execute)
+		case .queue(_, .thread(let test)) where test(): return try execute()
+		case .queue(_, .threadAsync(let test)) where test(): return try execute()
+		case .queue(_, .recursiveMutex(let test)) where test(): return try execute()
+		case .queue(let q, _): return try withoutActuallyEscaping(execute) { e in try q.sync(execute: e) }
+		case .custom(let c): return try c.invokeSync(execute)
 		}
 	}
 	
-	/// Invokes in a global concurrent context
-	public var asyncRelativeContext: Exec {
+	/// Invokes in a global concurrent context. This context can be used to safely "escape" self.
+	///
+	/// - Parameter qos: the QoSClass for the new async context. If `nil`, the QoSClass will be derived from the properties of `self`
+	/// - Returns: a context that is asynchronous and can be used to escape self
+	public func relativeAsync(qos: DispatchQoS.QoSClass? = nil) -> Exec {
 		switch self {
-		case .custom(let c): return c.asyncRelativeContext
-		default: return Exec.global
+		case .custom(let c): return c.relativeAsync(qos: qos)
+		case .main: return Exec.global(qos: .userInteractive)
+		case .queue(let q, _): return Exec.global(qos: q.qos.qosClass)
+		case .direct: return Exec.global
 		}
 	}
 	
