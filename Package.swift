@@ -4,17 +4,18 @@ import PackageDescription
 let package = Package(
 	name: "CwlUtils",
    products: [
-   	.library(name: "CwlUtils", type: .dynamic, targets: ["CwlUtils"]),
+   	.library(name: "CwlUtils", targets: ["CwlUtils"]),
+		.library(name: "CwlFrameAddress", targets: ["CwlFrameAddress"]),
 	],
 	dependencies: [
-		.package(url: "https://github.com/mattgallagher/CwlPreconditionTesting.git", from: "1.2.0"),
+		.package(url: "file:///Users/matt/Projects/CwlPreconditionTesting", .branch("master")),
 	],
 	targets: [
 		.target(
 			name: "CwlUtils",
 			dependencies: [
 				.target(name: "CwlFrameAddress"),
-				.target(name: "ReferenceRandomGenerators")
+				.target(name: "ReferenceRandomGenerators"),
 			]
 		),
 		.target(name: "CwlFrameAddress"),
