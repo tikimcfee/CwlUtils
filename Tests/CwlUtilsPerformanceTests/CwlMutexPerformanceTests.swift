@@ -33,13 +33,13 @@ public struct DispatchSemaphoreWrapper {
 	let s = DispatchSemaphore(value: 1)
 	init() {}
 	func sync<R>(f: () throws -> R) rethrows -> R {
-		_ = s.wait(timeout: DispatchTime.distantFuture)
+		_ = s.wait()
 		defer { s.signal() }
 		return try f()
 	}
 }
 
-let iterations = 10_000_000
+let iterations = 100_000
 
 class TestClass {
 	var testVariable: Int = 0
@@ -170,3 +170,12 @@ class MutexPerformanceTests: XCTestCase {
 		}
 	}
 }
+
+extension PThreadMutex {
+	public func sync_generic_param<T, R>(_ param: inout T, f: (inout T) throws -> R) rethrows -> R {
+		pthread_mutex_lock(&underlyingMutex)
+		defer { pthread_mutex_unlock(&underlyingMutex) }
+		return try f(&param)
+	}
+}
+
