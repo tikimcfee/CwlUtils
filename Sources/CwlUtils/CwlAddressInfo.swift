@@ -57,13 +57,13 @@ public struct AddressInfo {
 	}
 	
 	/// - returns: the address' offset relative to the nearest symbol
-	public var offset: Int {
+	public var offset: UInt {
 		if let dli_sname = info.dli_sname, let _ = String(validatingUTF8: dli_sname) {
-			return Int(address - UInt(bitPattern: info.dli_saddr))
+			return UInt(address - UInt(bitPattern: info.dli_saddr))
 		} else if let dli_fname = info.dli_fname, let _ = String(validatingUTF8: dli_fname) {
-			return Int(address - UInt(bitPattern: info.dli_fbase))
+			return UInt(address - UInt(bitPattern: info.dli_fbase))
 		} else {
-			return Int(address - UInt(bitPattern: info.dli_saddr))
+			return UInt(address - UInt(bitPattern: info.dli_saddr))
 		}
 	}
 	
